@@ -58,7 +58,8 @@ export class CellExecutionQueue implements IDisposable {
         if (cell.document.getText().trim().length === 0) {
             return;
         }
-        CellDiagnosticsProvider.clearErrors(cell.notebook);
+        CellDiagnosticsProvider.clearRuntimeErrors(cell.notebook);
+        CellDiagnosticsProvider.checkTypes(cell.notebook);
         const task = this.controller.createNotebookCellExecution(cell);
         const token = wrapCancellationToken(task.token);
         this.pendingCells.push({ cell, task, token });

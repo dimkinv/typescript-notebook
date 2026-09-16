@@ -12,6 +12,15 @@ declare const __webpack_require__: any;
 declare const __non_webpack_require__: any;
 let ts: typeof import('typescript');
 
+export type CellTypeDiagnostic = {
+    cell: NotebookCell;
+    start: number;
+    length: number;
+    message: string;
+    category: import('typescript').DiagnosticCategory;
+    code: number;
+};
+
 let tmpDirectory: string | undefined;
 const mapOfSourceFilesToNotebookUri = new Map<string, Uri>();
 const mapFromCellToPath = new WeakMap<NotebookCell, CodeObject>();
@@ -38,6 +47,84 @@ export namespace Compiler {
         );
         const requireFunc = typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
         ts = fs.existsSync(typescriptPath) ? requireFunc(typescriptPath) : requireFunc('typescript');
+    }
+    export function getTypeDiagnostics(notebook: NotebookDocument, strict: boolean): CellTypeDiagnostic[] {
+        const cells = notebook.getCells().filter((cell) => cell.document.languageId === 'typescript');
+        if (cells.length === 0) {
+            return [];
+        }
+
+        const cwd = getNotebookCwd(notebook);
+        const configPath = ts.findConfigFile(cwd, ts.sys.fileExists, 'tsconfig.json');
+        let options: import('typescript').CompilerOptions = {
+            target: ts.ScriptTarget.ESNext,
+            module: ts.ModuleKind.CommonJS,
+            moduleResolution: ts.ModuleResolutionKind.NodeJs,
+            esModuleInterop: true,
+            allowSyntheticDefaultImports: true,
+            skipLibCheck: true
+        };
+        if (configPath) {
+            const config = ts.readConfigFile(configPath, ts.sys.readFile);
+            if (!config.error) {
+                options = ts.parseJsonConfigFileContent(config.config, ts.sys, path.dirname(configPath)).options;
+            }
+        }
+        options = { ...options, noEmit: true, strict: strict || options.strict };
+        delete options.out;
+        delete options.outDir;
+        delete options.outFile;
+        delete options.rootDir;
+        delete options.declarationDir;
+
+        const cellOffsets: { cell: NotebookCell; start: number; end: number }[] = [];
+        let source = '';
+        cells.forEach((cell) => {
+            const start = source.length;
+            source += cell.document.getText();
+            cellOffsets.push({ cell, start, end: source.length });
+            source += EOL;
+        });
+
+        const notebookPath = notebook.isUntitled ? path.join(cwd, 'untitled-notebook') : notebook.uri.fsPath;
+        const virtualFileName = `${notebookPath}.ts`;
+        const canonicalVirtualFileName = path.resolve(virtualFileName);
+        const host = ts.createCompilerHost(options);
+        const originalGetSourceFile = host.getSourceFile.bind(host);
+        const originalFileExists = host.fileExists.bind(host);
+        const originalReadFile = host.readFile.bind(host);
+        const isVirtualFile = (fileName: string) => path.resolve(fileName) === canonicalVirtualFileName;
+        host.fileExists = (fileName) => isVirtualFile(fileName) || originalFileExists(fileName);
+        host.readFile = (fileName) => (isVirtualFile(fileName) ? source : originalReadFile(fileName));
+        host.getSourceFile = (fileName, languageVersion, onError, shouldCreateNewSourceFile) =>
+            isVirtualFile(fileName)
+                ? ts.createSourceFile(fileName, source, languageVersion, true, ts.ScriptKind.TS)
+                : originalGetSourceFile(fileName, languageVersion, onError, shouldCreateNewSourceFile);
+
+        const program = ts.createProgram([virtualFileName], options, host);
+        const notebookSyntaxDiagnosticCodes = new Set([1108, 1375, 1378]);
+        return ts
+            .getPreEmitDiagnostics(program)
+            .filter(
+                (diagnostic) =>
+                    diagnostic.file &&
+                    isVirtualFile(diagnostic.file.fileName) &&
+                    !notebookSyntaxDiagnosticCodes.has(diagnostic.code)
+            )
+            .map((diagnostic) => {
+                const diagnosticStart = diagnostic.start || 0;
+                const location =
+                    cellOffsets.find(({ start, end }) => diagnosticStart >= start && diagnosticStart <= end) ||
+                    cellOffsets[cellOffsets.length - 1];
+                return {
+                    cell: location.cell,
+                    start: Math.max(0, diagnosticStart - location.start),
+                    length: diagnostic.length || 1,
+                    message: ts.flattenDiagnosticMessageText(diagnostic.messageText, EOL),
+                    category: diagnostic.category,
+                    code: diagnostic.code
+                };
+            });
     }
     /**
      * Returns the Cell associated with the temporary file we create (used to enable debugging with source maps), this will

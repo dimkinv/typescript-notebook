@@ -12,11 +12,13 @@ import { JavaScriptKernel } from './kernel/jsKernel';
 import { Compiler } from './kernel/compiler';
 import { Samples } from './content/walkThrough';
 import { NodeRepl } from './kernel/repl';
+import { CellDiagnosticsProvider } from './kernel/problems';
 
 export async function activate(context: ExtensionContext) {
     registerDisposableRegistry(context);
     Samples.regsiter(context);
     Compiler.register(context);
+    CellDiagnosticsProvider.register(context);
     ContentProvider.register(context);
     Controller.regsiter();
     ServerLogger.register();

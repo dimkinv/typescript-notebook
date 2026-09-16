@@ -254,6 +254,22 @@
                     "default": true,
                     "description": "Display tensorflow visualization within the notebook.",
                     "scope": "machine"
+                },
+                "node_notebook.typeChecking": {
+                    "type": "string",
+                    "enum": [
+                        "off",
+                        "on",
+                        "strict"
+                    ],
+                    "enumDescriptions": [
+                        "Disable TypeScript diagnostics in notebooks.",
+                        "Type-check notebooks using the nearest tsconfig.json, or TypeScript defaults when none exists.",
+                        "Type-check notebooks using the nearest tsconfig.json and force strict mode."
+                    ],
+                    "default": "on",
+                    "description": "Controls TypeScript type checking across notebook cells.",
+                    "scope": "resource"
                 }
             }
         },

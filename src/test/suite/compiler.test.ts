@@ -149,6 +149,22 @@ suite('Top level await compiler tests', () => {
         assert.equal(-1, [1, 2, 3].indexOf(0));
         // const x = getCodeObject(undefined as any);
     });
+    test('reports type errors across TypeScript cells', async () => {
+        const nb = await createNotebook(['const answer: number = 42;', 'const message: string = answer;']);
+
+        const diagnostics = Compiler.getTypeDiagnostics(nb, true);
+
+        assert.strictEqual(diagnostics.length, 1);
+        assert.strictEqual(diagnostics[0].cell.index, 1);
+        assert.strictEqual(diagnostics[0].code, 2322);
+    });
+    test('allows notebook top-level await while type checking', async () => {
+        const nb = await createNotebook(['const answer = await Promise.resolve(42);', 'answer.toFixed();']);
+
+        const diagnostics = Compiler.getTypeDiagnostics(nb, true);
+
+        assert.deepStrictEqual(diagnostics, []);
+    });
     [false, true].forEach((supportsExceptionBreakpoints) => {
         suite(`${supportsExceptionBreakpoints ? 'With' : 'Without'} exception breakpoints`, () => {
             testCases.forEach(([code, expected]) => {
@@ -191,12 +207,16 @@ suite('Top level await compiler tests', () => {
             return generate(parsedCode, { compact: true }).code.split(/\r?\n/).join('').trim();
         }
     }
-    async function createNotebook(source: string) {
+    async function createNotebook(source: string | string[]) {
         const result = tmp.fileSync({ postfix: '.nnb' });
         disposables.push({
             dispose: () => result.removeCallback()
         });
-        fs.writeFileSync(result.name, JSON.stringify({ cells: [{ source, language: 'javascript' }] }));
+        const sources = Array.isArray(source) ? source : [source];
+        fs.writeFileSync(
+            result.name,
+            JSON.stringify({ cells: sources.map((cellSource) => ({ source: cellSource, language: 'typescript' })) })
+        );
         return workspace.openNotebookDocument(Uri.file(result.name));
     }
 });
