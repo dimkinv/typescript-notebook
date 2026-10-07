@@ -7,10 +7,10 @@ import { DebuggerFactory } from './debugFactory';
 export class DebuggerCommands {
     public static register(context: ExtensionContext) {
         context.subscriptions.push(
-            commands.registerCommand('node.notebook.debug', async (uri: Uri) => startDebugger(uri))
+            commands.registerCommand('nodeNotebookExtended.notebook.debug', async (uri: Uri) => startDebugger(uri))
         );
         context.subscriptions.push(
-            commands.registerCommand('node.notebook.runAndDebugCell', async (cell: NotebookCell | undefined) => {
+            commands.registerCommand('nodeNotebookExtended.notebook.runAndDebugCell', async (cell: NotebookCell | undefined) => {
                 if (!cell) {
                     return;
                 }

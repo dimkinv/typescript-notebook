@@ -12,6 +12,7 @@ module.exports = {
         test: './src/test/runTest.ts'
     },
     output: {
+        hashFunction: 'sha256',
         filename: (pathData) => {
             if (pathData.chunk.name === 'server') {
                 return path.join('out', 'extension', 'server', 'index.js');

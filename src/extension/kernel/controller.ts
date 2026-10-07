@@ -45,7 +45,7 @@ export class Controller implements IDisposable {
             this.disposables
         );
         workspace.onDidCloseNotebookDocument((e) => this.resetNotebook(e), this, this.disposables);
-        this.disposables.push(commands.registerCommand('node.kernel.restart', this.restart, this));
+        this.disposables.push(commands.registerCommand('nodeNotebookExtended.kernel.restart', this.restart, this));
     }
     public dispose() {
         disposeAllDisposables(this.disposables);

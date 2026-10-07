@@ -67,7 +67,7 @@ export class CellDiagnosticsProvider {
         notebook.getCells().forEach((cell) => runtimeDiagnosticsCollection.delete(cell.document.uri));
     }
     public static scheduleTypeCheck(notebook: NotebookDocument) {
-        if (notebook.notebookType !== 'node-notebook') {
+        if (notebook.notebookType !== 'node-notebook-extended') {
             return;
         }
         const key = notebook.uri.toString();
@@ -85,7 +85,7 @@ export class CellDiagnosticsProvider {
     }
     public static checkTypes(notebook: NotebookDocument): boolean {
         notebook.getCells().forEach((cell) => typeDiagnosticsCollection.delete(cell.document.uri));
-        const mode = workspace.getConfiguration('node_notebook', notebook.uri).get<'off' | 'on' | 'strict'>(
+        const mode = workspace.getConfiguration('node_notebook_extended', notebook.uri).get<'off' | 'on' | 'strict'>(
             'typeChecking',
             'on'
         );

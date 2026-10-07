@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0 (16 September 2026)
+* First release of Node.js Notebooks Extended, maintained by Danny Vernovsky.
+* Based on Node.js Notebooks by Don Jayamanne under the MIT License.
+* Add configurable, notebook-wide TypeScript type checking across cells.
+* Use distinct extension, command, renderer, view, and configuration identifiers.
+
 ## 2.0.5 (8 Nov 2021)
 * Ensure it works in WSL (https://github.com/DonJayamanne/typescript-notebook/issues/44)
 

@@ -1,4 +1,4 @@
-export const notebookType = 'node-notebook';
+export const notebookType = 'node-notebook-extended';
 export const iwnotebookType = 'interactive';
 
 const writingToConsoleOutputCompletdMarker = 'd1786f7c-d2ed-4a27-bd8a-ce19f704d111';

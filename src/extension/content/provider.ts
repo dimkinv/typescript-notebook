@@ -86,13 +86,13 @@ export class ContentProvider implements NotebookSerializer {
 
     public static register(context: ExtensionContext) {
         context.subscriptions.push(
-            workspace.registerNotebookSerializer('node-notebook', new ContentProvider(), {
+            workspace.registerNotebookSerializer(notebookType, new ContentProvider(), {
                 transientOutputs: false,
                 transientDocumentMetadata: {}
             })
         );
         context.subscriptions.push(
-            commands.registerCommand('node.notebook.new', async () => {
+            commands.registerCommand('nodeNotebookExtended.notebook.new', async () => {
                 const data = new NotebookData([new NotebookCellData(NotebookCellKind.Code, '', 'typescript')]);
                 await workspace.openNotebookDocument(notebookType, data);
                 // const doc = await workspace.openNotebookDocument(notebookType, data);

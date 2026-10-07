@@ -1,23 +1,23 @@
 {
-    "name": "typescript-notebook",
-    "displayName": "Node.js Notebooks (REPL)",
-    "description": "Iterative & interactive programming for Node.js in JavaScript/TypeScript (REPL), with great support for Tensorflow.js, debugging, & more..",
-    "version": "2.0.5",
+    "name": "nodejs-notebooks-extended",
+    "displayName": "Node.js Notebooks Extended (REPL)",
+    "description": "Maintained Node.js notebooks for JavaScript and TypeScript, with cross-cell type checking, debugging, and rich visualizations.",
+    "version": "0.1.0",
     "engines": {
         "vscode": "^1.62.0"
     },
-    "publisher": "donjayamanne",
+    "publisher": "dannyvernovsky",
     "author": {
-        "name": "Don Jayamanne"
+        "name": "Danny Vernovsky"
     },
     "license": "MIT",
-    "homepage": "https://github.com/DonJayamanne/typescript-notebook",
+    "homepage": "https://github.com/dimkinv/typescript-notebook#readme",
     "repository": {
         "type": "git",
-        "url": "https://github.com/DonJayamanne/typescript-notebook"
+        "url": "https://github.com/dimkinv/typescript-notebook.git"
     },
     "bugs": {
-        "url": "https://github.com/DonJayamanne/typescript-notebook"
+        "url": "https://github.com/dimkinv/typescript-notebook/issues"
     },
     "preview": true,
     "icon": "resources/icons/logo.png",
@@ -47,126 +47,126 @@
         "virtualWorkspaces": true
     },
     "activationEvents": [
-        "onNotebook:node-notebook",
-        "onWalkthrough:plotlyWalkthrough",
-        "onWalkthrough:danfojsWalkthrough",
-        "onWalkthrough:tensorflowWalkthrough",
-        "onWalkthrough:nodeNotebookWalkthrough",
-        "onCommand:node.notebook.sample",
-        "onCommand:node.notebook.sample.plotly.saveToFile",
-        "onCommand:node.notebook.sample.plotly.embedInDiv",
-        "onCommand:node.notebook.sample.danfojs.htmlOutput",
-        "onCommand:node.notebook.sample.danfojs.plots",
-        "onCommand:node.notebook.sample.danfojs.embedInDiv",
-        "onCommand:node.notebook.sample.tensorflow.sample",
-        "onCommand:node.notebook.sample.tensorflow.tensorboard",
-        "onCommand:node.notebook.sample.basics.sample",
-        "onCommand:node.notebook.sample.basics.shellScripts",
-        "onCommand:node.notebook.sample.basics.tips",
-        "onCommand:node.notebook.sample.basics.richOutput",
-        "onCommand:node.notebook.sample.basics.debug",
-        "onCommand:node.notebook.sample.arquero.htmlOutput",
-        "onCommand:node.notebook.new",
-        "onCommand:node.notebook.newREPL",
-        "onRenderer:node-notebook-plot-renderer",
-        "onRenderer:tensorflow-vis-renderer"
+        "onNotebook:node-notebook-extended",
+        "onWalkthrough:nodeNotebookExtended.plotlyWalkthrough",
+        "onWalkthrough:nodeNotebookExtended.danfojsWalkthrough",
+        "onWalkthrough:nodeNotebookExtended.tensorflowWalkthrough",
+        "onWalkthrough:nodeNotebookExtended.nodeNotebookWalkthrough",
+        "onCommand:nodeNotebookExtended.notebook.sample",
+        "onCommand:nodeNotebookExtended.notebook.sample.plotly.saveToFile",
+        "onCommand:nodeNotebookExtended.notebook.sample.plotly.embedInDiv",
+        "onCommand:nodeNotebookExtended.notebook.sample.danfojs.htmlOutput",
+        "onCommand:nodeNotebookExtended.notebook.sample.danfojs.plots",
+        "onCommand:nodeNotebookExtended.notebook.sample.danfojs.embedInDiv",
+        "onCommand:nodeNotebookExtended.notebook.sample.tensorflow.sample",
+        "onCommand:nodeNotebookExtended.notebook.sample.tensorflow.tensorboard",
+        "onCommand:nodeNotebookExtended.notebook.sample.basics.sample",
+        "onCommand:nodeNotebookExtended.notebook.sample.basics.shellScripts",
+        "onCommand:nodeNotebookExtended.notebook.sample.basics.tips",
+        "onCommand:nodeNotebookExtended.notebook.sample.basics.richOutput",
+        "onCommand:nodeNotebookExtended.notebook.sample.basics.debug",
+        "onCommand:nodeNotebookExtended.notebook.sample.arquero.htmlOutput",
+        "onCommand:nodeNotebookExtended.notebook.new",
+        "onCommand:nodeNotebookExtended.notebook.newREPL",
+        "onRenderer:node-notebook-extended-plot-renderer",
+        "onRenderer:node-notebook-extended-tensorflow-vis-renderer"
     ],
     "main": "./out/extension/index.js",
     "contributes": {
         "commands": [
             {
                 "category": "Notebook",
-                "command": "node.notebook.new",
-                "title": "Node.js Notebook"
+                "command": "nodeNotebookExtended.notebook.new",
+                "title": "Node.js Notebook Extended"
             },
             {
                 "category": "Notebook",
-                "command": "node.notebook.sample",
-                "title": "Open a sample node.js notebook"
+                "command": "nodeNotebookExtended.notebook.sample",
+                "title": "Open a sample Node.js notebook"
             },
             {
                 "category": "Notebook",
-                "command": "node.notebook.newREPL",
-                "title": "Open node.js REPL"
+                "command": "nodeNotebookExtended.notebook.newREPL",
+                "title": "Open Node.js REPL"
             },
             {
                 "category": "Notebook",
                 "icon": "$(bug)",
-                "command": "node.notebook.debug",
+                "command": "nodeNotebookExtended.notebook.debug",
                 "shortTitle": "Debugx",
                 "title": "Debug Notebook",
-                "enablement": "notebookType == 'node-notebook' && isWorkspaceTrusted"
+                "enablement": "notebookType == 'node-notebook-extended' && isWorkspaceTrusted"
             },
             {
                 "category": "Notebook",
                 "icon": "$(debug-restart)",
-                "command": "node.kernel.restart",
+                "command": "nodeNotebookExtended.kernel.restart",
                 "shortTitle": "Restart",
                 "title": "Restart Kernel",
-                "enablement": "notebookType == 'node-notebook' && isWorkspaceTrusted"
+                "enablement": "notebookType == 'node-notebook-extended' && isWorkspaceTrusted"
             },
             {
-                "command": "node.notebook.runAndDebugCell",
+                "command": "nodeNotebookExtended.notebook.runAndDebugCell",
                 "title": "Debug Cell",
                 "icon": "$(debug-alt-small)",
                 "category": "Notebook",
-                "enablement": "notebookType == 'node-notebook' && isWorkspaceTrusted"
+                "enablement": "notebookType == 'node-notebook-extended' && isWorkspaceTrusted"
             }
         ],
         "menus": {
             "commandPalette": [
                 {
-                    "command": "node.notebook.new",
+                    "command": "nodeNotebookExtended.notebook.new",
                     "title": "New Node Notebook",
                     "group": "Notebook"
                 },
                 {
-                    "command": "node.notebook.debug",
+                    "command": "nodeNotebookExtended.notebook.debug",
                     "title": "Debug",
                     "group": "Notebook",
                     "when": "false"
                 },
                 {
-                    "command": "node.notebook.runAndDebugCell",
+                    "command": "nodeNotebookExtended.notebook.runAndDebugCell",
                     "title": "Debug",
                     "group": "Notebook",
                     "when": "false"
                 },
                 {
-                    "command": "node.kernel.restart",
+                    "command": "nodeNotebookExtended.kernel.restart",
                     "title": "Restart Kernel",
                     "group": "Notebook",
-                    "when": "false && notebookType == 'node-notebook' && isWorkspaceTrusted"
+                    "when": "false && notebookType == 'node-notebook-extended' && isWorkspaceTrusted"
                 }
             ],
             "notebook/cell/execute": [
                 {
-                    "command": "node.notebook.runAndDebugCell",
-                    "when": "notebookType == 'node-notebook' && isWorkspaceTrusted && notebookCellType == code"
+                    "command": "nodeNotebookExtended.notebook.runAndDebugCell",
+                    "when": "notebookType == 'node-notebook-extended' && isWorkspaceTrusted && notebookCellType == code"
                 }
             ],
             "editor/title": [
                 {
-                    "command": "node.kernel.restart",
+                    "command": "nodeNotebookExtended.kernel.restart",
                     "group": "navigation@1",
-                    "when": "notebookType == 'node-notebook' && isWorkspaceTrusted"
+                    "when": "notebookType == 'node-notebook-extended' && isWorkspaceTrusted"
                 },
                 {
-                    "command": "node.notebook.debug",
+                    "command": "nodeNotebookExtended.notebook.debug",
                     "group": "navigation@3",
-                    "when": "notebookType == 'node-notebook' && isWorkspaceTrusted"
+                    "when": "notebookType == 'node-notebook-extended' && isWorkspaceTrusted"
                 }
             ],
             "file/newFile": [
                 {
-                    "command": "node.notebook.new"
+                    "command": "nodeNotebookExtended.notebook.new"
                 }
             ]
         },
         "notebooks": [
             {
-                "type": "node-notebook",
-                "displayName": "Node.js Notebook",
+                "type": "node-notebook-extended",
+                "displayName": "Node.js Notebook Extended",
                 "selector": [
                     {
                         "filenamePattern": "*.nnb"
@@ -178,24 +178,24 @@
             "activitybar": [
                 {
                     "icon": "resources/icons/tf.svg",
-                    "id": "node-notebook",
+                    "id": "node-notebook-extended",
                     "title": "Tensorflow Visualization"
                 }
             ]
         },
         "views": {
-            "node-notebook": [
+            "node-notebook-extended": [
                 {
                     "name": "Tensorflow Visualization",
-                    "id": "tfjs-vis",
+                    "id": "node-notebook-extended-tfjs-vis",
                     "type": "webview",
-                    "when": "node_notebook.tfjs-vis.used && !config.node_notebook.disableTensorflowVis"
+                    "when": "node_notebook_extended.tfjs-vis.used && !config.node_notebook_extended.disableTensorflowVis"
                 }
             ]
         },
         "notebookRenderer": [
             {
-                "id": "node-notebook-plot-renderer",
+                "id": "node-notebook-extended-plot-renderer",
                 "entrypoint": "./out/views/plotGenerator.js",
                 "displayName": "Plotly Renderer",
                 "mimeTypes": [
@@ -204,7 +204,7 @@
                 "requiresMessaging": "always"
             },
             {
-                "id": "tensorflow-vis-renderer",
+                "id": "node-notebook-extended-tensorflow-vis-renderer",
                 "entrypoint": "./out/views/tfjsvisRenderer.js",
                 "requiresMessaging": "always",
                 "displayName": "Tensorflow Visualization",
@@ -229,33 +229,33 @@
         ],
         "configuration": {
             "type": "object",
-            "title": "Typescript Notebook",
+            "title": "Node.js Notebooks Extended",
             "properties": {
-                "node_notebook.registerTsNode": {
+                "node_notebook_extended.registerTsNode": {
                     "type": "boolean",
                     "default": true,
                     "description": "Register ts-node that allows importing TypeScript modules without the user having to transpile TypeScript into JavaScript.",
                     "scope": "machine"
                 },
-                "node_notebook.disableTensorflowVis": {
+                "node_notebook_extended.disableTensorflowVis": {
                     "type": "boolean",
                     "default": false,
                     "description": "Disables the Tensorflow Visualization panel (even if @tensorflow/tfjs-vis is used the panel will not be displayed.",
                     "scope": "machine"
                 },
-                "node_notebook.disablePseudoTerminal": {
+                "node_notebook_extended.disablePseudoTerminal": {
                     "type": "boolean",
                     "default": false,
                     "description": "Disables the pseudo terminal (backed by node-pty). If disabled, will always use process based shells which won't provide the best experience.",
                     "scope": "machine"
                 },
-                "node_notebook.inlineTensorflowVisualizations": {
+                "node_notebook_extended.inlineTensorflowVisualizations": {
                     "type": "boolean",
                     "default": true,
                     "description": "Display tensorflow visualization within the notebook.",
                     "scope": "machine"
                 },
-                "node_notebook.typeChecking": {
+                "node_notebook_extended.typeChecking": {
                     "type": "string",
                     "enum": [
                         "off",
@@ -275,7 +275,7 @@
         },
         "walkthroughs": [
             {
-                "id": "nodeNotebookWalkthrough",
+                "id": "nodeNotebookExtended.nodeNotebookWalkthrough",
                 "title": "Getting started with notebooks for node.js",
                 "description": "Run/debug node.js code within notebooks with rich visualizations & more.",
                 "featuredFor": [
@@ -344,7 +344,7 @@
                         "id": "samples",
                         "title": "Sample notebooks",
                         "description": "View a number of different sample notebooks",
-                        "command": "node.notebook.sample",
+                        "command": "nodeNotebookExtended.notebook.sample",
                         "media": {
                             "markdown": "resources/docs/basics/samples.md"
                         }
@@ -363,7 +363,7 @@
         "compile:extension:webpack": "webpack --config=build/webpack/webpack.extension.config.js",
         "lint": "eslint src/client --ext ts && eslint src/extension --ext ts && eslint build --ext js",
         "lint-format": "npx prettier 'src/**/*.ts*' --check && npx prettier 'build/**/*.js' --check",
-        "package": "vsce package --yarn -o node-notebooks.vsix",
+        "package": "vsce package -o nodejs-notebooks-extended.vsix",
         "test": "node ./out/test/runTest.js",
         "prettier-fix": "prettier 'src/**/*.ts*' --write && prettier 'build/**/*.js' --write",
         "download-api": "vscode-dts dev",
@@ -408,6 +408,7 @@
         "@types/yargs": "^17.0.2",
         "@typescript-eslint/eslint-plugin": "^4.29.0",
         "@typescript-eslint/parser": "^4.29.0",
+        "@vscode/vsce": "^4.0.0",
         "arquero": "^4.8.4",
         "cache-loader": "^4.1.0",
         "concurrently": "^5.2.0",
@@ -439,7 +440,7 @@
         "vscode-debugprotocol": "^1.48.0",
         "vscode-dts": "^0.3.1",
         "vscode-test": "^1.4.0",
-        "webpack": "^5.38.1",
+        "webpack": "^5.111.0",
         "webpack-bundle-analyzer": "^3.9.0",
         "webpack-cli": "^4.7.2",
         "webpack-fix-default-import-plugin": "^1.0.3",

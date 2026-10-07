@@ -4,7 +4,7 @@ import { Controller } from '.';
 export class NodeRepl {
     public static register(context: ExtensionContext) {
         context.subscriptions.push(
-            commands.registerCommand('node.notebook.newREPL', async () => {
+            commands.registerCommand('nodeNotebookExtended.notebook.newREPL', async () => {
                 await commands.executeCommand(
                     'interactive.open',
                     { viewColumn: ViewColumn.Active, preserveFocus: false },
@@ -14,7 +14,7 @@ export class NodeRepl {
                 );
                 await commands.executeCommand('notebook.selectKernel', {
                     id: Controller.interactiveController.id,
-                    extension: 'donjayamanne.typescript-notebook'
+                    extension: 'dannyvernovsky.nodejs-notebooks-extended'
                 });
             })
         );

@@ -17,6 +17,7 @@ module.exports = {
     },
     output: {
         path: path.join(constants.ExtensionRootDir, 'out', 'views'),
+        hashFunction: 'sha256',
         filename: '[name].js',
         chunkFilename: `[name].bundle.js`,
         libraryTarget: 'module',

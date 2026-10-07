@@ -2,7 +2,7 @@ import { commands, ExtensionContext, Uri, Webview, WebviewView, WebviewViewProvi
 import { TensorFlowVis } from '../server/types';
 import { registerDisposable } from '../utils';
 
-const viewType = 'tfjs-vis';
+const viewType = 'node-notebook-extended-tfjs-vis';
 function shouldShowPanel(request: TensorFlowVis['request']) {
     switch (request) {
         case 'registerfitcallback':
@@ -23,7 +23,7 @@ export class TensorflowVisClient implements WebviewViewProvider {
     }
     private static async sendMessageInternal(message: TensorFlowVis) {
         if (!TensorflowVisClient.view && shouldShowPanel(message.request)) {
-            void commands.executeCommand('setContext', 'node_notebook.tfjs-vis.used', true);
+            void commands.executeCommand('setContext', 'node_notebook_extended.tfjs-vis.used', true);
             await commands.executeCommand(`${viewType}.focus`);
         }
         if (shouldShowPanel(message.request) && TensorflowVisClient.view) {

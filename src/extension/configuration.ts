@@ -5,11 +5,11 @@ import { promises as fs } from "fs";
 import { registerDisposable } from './utils';
 
 export function getConfiguration(): Configuration {
-    const config = workspace.getConfiguration('node_notebook', undefined);
+    const config = workspace.getConfiguration('node_notebook_extended', undefined);
     return {
         registerTsNode: config.get<boolean>('registerTsNode', true),
         disablePseudoTerminal: config.get<boolean>('disablePseudoTerminal', false),
-        inlineTensorflowVisualizations: config.get<boolean>('node_notebook.inlineTensorflowVisualizations', true),
+        inlineTensorflowVisualizations: config.get<boolean>('inlineTensorflowVisualizations', true),
         injectTsVis: false,
         injectPlotly: false,
         terminalColumns: 80,
