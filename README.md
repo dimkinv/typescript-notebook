@@ -14,6 +14,7 @@
 * Run shell scripts within the notebook cell.
 * Quickly prototype and view HTML/JavaScript/CSS output
 * Support for user input using [readline](https://nodejs.org/api/readline.html#readline_readline_createinterface_options)
+* Run decorator-based frameworks such as NestJS, including constructor dependency injection.
 
 
 Packages such [plotly](https://plotly.com/javascript/), [tfjs-vis](https://www.npmjs.com/package/@tensorflow/tfjs-vis) & [danfo.js](https://danfo.jsdata.org/) support rich visualization only in the browser,

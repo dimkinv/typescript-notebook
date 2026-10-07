@@ -165,6 +165,23 @@ suite('Top level await compiler tests', () => {
 
         assert.deepStrictEqual(diagnostics, []);
     });
+    test('emits decorator metadata for dependency injection', async () => {
+        const code = [
+            'function Injectable(): ClassDecorator { return () => undefined; }',
+            '@Injectable() class ExampleService {}',
+            '@Injectable() class ExampleController {',
+            '    constructor(private readonly service: ExampleService) {}',
+            '}'
+        ].join('\n');
+        const nb = await createNotebook(code);
+
+        const codeObject = Compiler.getOrCreateCodeObject(nb.cellAt(0), code);
+
+        assert.ok(
+            codeObject.code.includes('__metadata("design:paramtypes", [ExampleService])'),
+            `Expected constructor metadata in compiled code:\n${codeObject.code}`
+        );
+    });
     [false, true].forEach((supportsExceptionBreakpoints) => {
         suite(`${supportsExceptionBreakpoints ? 'With' : 'Without'} exception breakpoints`, () => {
             testCases.forEach(([code, expected]) => {

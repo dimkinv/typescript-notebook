@@ -369,6 +369,7 @@ export namespace Compiler {
                     esModuleInterop: true,
                     moduleResolution: ts.ModuleResolutionKind.NodeJs,
                     experimentalDecorators: true,
+                    emitDecoratorMetadata: true,
                     allowUnreachableCode: true,
                     preserveConstEnums: true,
                     allowJs: true,

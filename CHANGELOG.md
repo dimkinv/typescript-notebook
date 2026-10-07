@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1 (7 October 2026)
+* Emit TypeScript decorator metadata so frameworks such as NestJS can use constructor dependency injection in notebooks.
+* Add a NestJS sample notebook that installs dependencies, starts an HTTP application, verifies a route, and shuts it down.
+* Add regression coverage for emitted dependency-injection metadata.
+
 ## 0.1.0 (16 September 2026)
 * First release of Node.js Notebooks Extended, maintained by Danny Vernovsky.
 * Based on Node.js Notebooks by Don Jayamanne under the MIT License.
@@ -36,4 +41,3 @@
 * Excellent support for [danfo.js](https://danfo.jsdata.org/) (rich HTML output and plots)
 * Run shell scripts within the notebook cell.
 * Quickly prototype and view HTML/JavaScript/CSS output
-

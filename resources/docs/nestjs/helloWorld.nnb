@@ -1,0 +1,81 @@
+{
+    "cells": [
+        {
+            "language": "markdown",
+            "source": [
+                "# NestJS in a TypeScript notebook\n\nThis notebook defines a service, controller, and module across separate cells, starts a real Nest HTTP application, calls it, and shuts it down.\n\nOpen the notebook in a project folder. Run the install cell once if the project does not already contain NestJS, then run the remaining cells in order."
+            ],
+            "outputs": []
+        },
+        {
+            "language": "shellscript",
+            "source": [
+                "npm install @nestjs/common @nestjs/core @nestjs/platform-express reflect-metadata rxjs"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "import 'reflect-metadata';\nimport { Controller, Get, Injectable, Module } from '@nestjs/common';\nimport { NestFactory } from '@nestjs/core';\nimport { get as httpGet } from 'http';"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "@Injectable()\nclass GreetingService {\n    greet(name: string) {\n        return { message: `Hello, ${name}!` };\n    }\n}"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "@Controller()\nclass GreetingController {\n    constructor(private readonly greetings: GreetingService) {}\n\n    @Get('hello')\n    hello() {\n        return this.greetings.greet('NestJS notebook');\n    }\n}"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "// Nest uses this emitted metadata to discover constructor dependencies.\nReflect.getMetadata('design:paramtypes', GreetingController).map((type: Function) => type.name)"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "@Module({\n    controllers: [GreetingController],\n    providers: [GreetingService]\n})\nclass AppModule {}"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "// Port 0 asks the operating system for a free port, making reruns safer.\nvar app = await NestFactory.create(AppModule, { logger: false });\nawait app.listen(0, '127.0.0.1');\nvar address = app.getHttpServer().address();\nvar port = typeof address === 'string' ? address : address.port;\n`Nest application listening on http://127.0.0.1:${port}`"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "var result = await new Promise<{ status: number | undefined; body: unknown }>((resolve, reject) => {\n    httpGet(`http://127.0.0.1:${port}/hello`, (response) => {\n        var chunks = '';\n        response.setEncoding('utf8');\n        response.on('data', (chunk) => chunks += chunk);\n        response.on('end', () => resolve({\n            status: response.statusCode,\n            body: JSON.parse(chunks)\n        }));\n    }).on('error', reject);\n});\nresult"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "await app.close();\n'Nest application closed'"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "## Iterating\n\nAfter changing a decorated class, close the existing application and rerun the class, module, bootstrap, request, and cleanup cells. Nest's dependency-injection container keeps the class definitions that existed when the application was created."
+            ],
+            "outputs": []
+        }
+    ]
+}

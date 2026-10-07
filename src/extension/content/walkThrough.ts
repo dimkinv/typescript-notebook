@@ -81,6 +81,13 @@ samples.push({
     description: 'basics',
     path: path.join('resources', 'docs', 'basics', 'tips.nnb')
 });
+// NestJS
+samples.push({
+    command: 'nodeNotebookExtended.notebook.sample.nestjs.helloWorld',
+    label: 'Build and call a NestJS application',
+    description: 'NestJS',
+    path: path.join('resources', 'docs', 'nestjs', 'helloWorld.nnb')
+});
 // arquero
 samples.push({
     command: 'nodeNotebookExtended.notebook.sample.arquero.htmlOutput',

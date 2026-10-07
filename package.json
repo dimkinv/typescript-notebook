@@ -2,7 +2,7 @@
     "name": "nodejs-notebooks-extended",
     "displayName": "Node.js Notebooks Extended (REPL)",
     "description": "Maintained Node.js notebooks for JavaScript and TypeScript, with cross-cell type checking, debugging, and rich visualizations.",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "engines": {
         "vscode": "^1.62.0"
     },
