@@ -10,8 +10,9 @@ import {
     workspace
 } from 'vscode';
 import { IDisposable } from '../types';
-import * as getPort from 'get-port';
-import * as WebSocket from 'ws';
+import type WebSocketClient from 'ws';
+const getPort: typeof import('get-port') = require('get-port');
+const WebSocket: typeof import('ws') = require('ws');
 import { CellExecutionState } from './types';
 import * as path from 'path';
 import { ChildProcess, spawn } from 'child_process';
@@ -36,8 +37,8 @@ let getPortsPromise: Promise<unknown> = Promise.resolve();
 export class JavaScriptKernel implements IDisposable {
     private static extensionDir: Uri;
     private starting?: Promise<void>;
-    private server?: WebSocket.Server;
-    private webSocket = createDeferred<WebSocket>();
+    private server?: import('ws').Server;
+    private webSocket = createDeferred<WebSocketClient>();
     private serverProcess?: ChildProcess;
     private startHandlingStreamOutput?: boolean;
     private disposed?: boolean;
@@ -67,6 +68,10 @@ export class JavaScriptKernel implements IDisposable {
     private readonly cwd?: string;
     constructor(private readonly notebook: NotebookDocument, private readonly controller: NotebookController) {
         this.cwd = getNotebookCwd(notebook);
+        this.trace('created; cwd=%s', this.cwd);
+    }
+    private trace(message: string, ...details: unknown[]) {
+        ServerLogger.appendLine(`[Kernel ${this.notebook.uri.fsPath}] ${message}`, ...details);
     }
     public static get(notebook: NotebookDocument) {
         return kernels.get(notebook);
@@ -89,7 +94,7 @@ export class JavaScriptKernel implements IDisposable {
         }
         kernel = new JavaScriptKernel(notebook, controller);
         kernels.set(notebook, kernel);
-        void kernel.start();
+        void kernel.start().catch((error: unknown) => ServerLogger.appendLine('Failed to start Node.js kernel:', error));
         return kernel;
     }
     public dispose() {
@@ -97,6 +102,7 @@ export class JavaScriptKernel implements IDisposable {
             return;
         }
         this.disposed = true;
+        this.trace('disposing; pid=%s pendingTasks=%s', this.serverProcess?.pid, this.tasks.size);
         Array.from(this.tasks.values()).forEach((item) => {
             try {
                 item.stdOutput.end(undefined);
@@ -108,6 +114,9 @@ export class JavaScriptKernel implements IDisposable {
         kernels.delete(this.notebook);
         this.serverProcess?.kill();
         this.serverProcess = undefined;
+        this.webSocket.promise.then((socket) => socket.terminate(), noop);
+        this.server?.close();
+        this.waitingForLastOutputMessage?.deferred.resolve();
     }
     /**
      * We cannot stop execution of JS, hence ignore the cancellation token.
@@ -117,7 +126,20 @@ export class JavaScriptKernel implements IDisposable {
         // We cannot stop execution of JS, hence ignore the cancellation token.
         _token: CancellationToken
     ): Promise<CellExecutionState> {
-        await this.initialized.promise;
+        this.trace('cell %s requested; language=%s initialized=%s', task.cell.index + 1, task.cell.document.languageId, this.initialized.completed);
+        try {
+            await this.start();
+            this.trace('cell %s waiting for initialization', task.cell.index + 1);
+            await this.initialized.promise;
+        } catch (error: unknown) {
+            this.trace('cell %s startup failed: %s', task.cell.index + 1, error);
+            task.start(Date.now());
+            await task.clearOutput();
+            const output = CellOutput.getOrCreate(task, this.controller, generateId());
+            output.appendError(error instanceof Error ? error : new Error(String(error)));
+            await output.end(false, Date.now());
+            return CellExecutionState.error;
+        }
         task.start(Date.now());
         // TODO: fix waiting on https://github.com/microsoft/vscode/issues/131123
         await task.clearOutput();
@@ -126,6 +148,7 @@ export class JavaScriptKernel implements IDisposable {
             return CellExecutionState.notExecutedEmptyCell;
         }
         const requestId = generateId();
+        this.trace('cell %s started; request=%s', task.cell.index + 1, requestId);
         this.waitingForLastOutputMessage = {
             expectedString: createConsoleOutputCompletedMarker(requestId),
             deferred: createDeferred<void>()
@@ -138,8 +161,10 @@ export class JavaScriptKernel implements IDisposable {
         task.executionOrder = getNextExecutionOrder(task.cell.notebook);
         let code: CodeObject;
         try {
+            this.trace('request=%s compiling cell %s', requestId, task.cell.index + 1);
             code = Compiler.getOrCreateCodeObject(task.cell);
         } catch (ex: unknown) {
+            this.trace('request=%s compilation failed: %s', requestId, ex);
             console.error(`Failed to generate code object`, ex);
             const error = new Error(`Failed to generate code object, ${(ex as Partial<Error> | undefined)?.message}`);
             error.stack = ''; // Don't show stack trace pointing to our internal code (its not useful & its ugly)
@@ -148,6 +173,7 @@ export class JavaScriptKernel implements IDisposable {
             return CellExecutionState.error;
         }
         this.mapOfCodeObjectsToCellIndex.set(code.sourceFilename, task.cell.index);
+        this.trace('request=%s compiled; file=%s characters=%s', requestId, code.sourceFilename, code.code.length);
         ServerLogger.appendLine(`Execute:`);
         ServerLogger.appendLine(code.code);
         await this.sendMessage({ type: 'cellExec', code, requestId });
@@ -163,13 +189,24 @@ export class JavaScriptKernel implements IDisposable {
         return this.starting;
     }
     private async startInternal() {
+        this.trace('startup: allocating ports and writing configuration');
         const [port, debugPort, configFile] = await Promise.all([
             this.getPort(),
             this.getPort(),
             writeConfigurationToTempFile()
         ]);
+        this.trace('startup: websocketPort=%s debugPort=%s config=%s', port, debugPort, configFile);
         this.server = new WebSocket.Server({ port });
+        this.server.on('error', (error: Error) => {
+            ServerLogger.appendLine('Kernel WebSocket server failed:', error);
+            if (!this.initialized.completed) {
+                this.initialized.reject(error);
+            }
+        });
         this.server.on('connection', (ws) => {
+            this.trace('WebSocket connected');
+            ws.on('close', (code, reason) => this.trace('WebSocket closed; code=%s reason=%s', code, reason.toString()));
+            ws.on('error', (error) => this.trace('WebSocket error: %s', error));
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ws.on('message', (message: any) => {
                 if (typeof message === 'string' && message.startsWith('{') && message.endsWith('}')) {
@@ -180,12 +217,13 @@ export class JavaScriptKernel implements IDisposable {
                             this.startHandlingStreamOutput = true;
                             this._debugPort.resolve(debugPort);
                             this.initialized.resolve();
+                            this.trace('kernel initialized; pid=%s', this.serverProcess?.pid);
                         }
                     } catch (ex) {
-                        ServerLogger.appendLine(`Failed to handle message ${message}`);
+                        this.trace('Failed to handle message; bytes=%s error=%s', message.length, ex);
                     }
                 } else {
-                    console.log('received: %s', message);
+                    this.trace('Unexpected WebSocket payload; type=%s buffer=%s', typeof message, Buffer.isBuffer(message));
                 }
             });
 
@@ -213,13 +251,21 @@ export class JavaScriptKernel implements IDisposable {
                     cwd: this.cwd
                 }
             );
-            this.serverProcess.on('close', (code: number) => {
+            this.serverProcess.on('spawn', () => this.trace('process spawned; pid=%s cwd=%s', this.serverProcess?.pid, this.cwd));
+            this.serverProcess.on('close', (code: number | null) => {
                 ServerLogger.appendLine(`Server Exited, code = ${code}`);
+                if (!this.disposed && !this.initialized.completed) {
+                    this.initialized.reject(new Error(`Node.js kernel exited before initialization (code ${code})`));
+                }
             });
             this.serverProcess.on('error', (error) => {
                 ServerLogger.appendLine('Server Exited, error:', error);
+                if (!this.initialized.completed) {
+                    this.initialized.reject(error);
+                }
             });
             this.serverProcess.stderr?.on('data', (data: Buffer | string) => {
+                this.trace('stderr chunk; bytes=%s forwarding=%s request=%s', data.length, !!this.startHandlingStreamOutput, this.currentTask?.requestId);
                 if (this.startHandlingStreamOutput) {
                     const output = this.getCellOutput();
                     if (output) {
@@ -236,6 +282,7 @@ export class JavaScriptKernel implements IDisposable {
                 }
             });
             this.serverProcess.stdout?.on('data', (data: Buffer | string) => {
+                this.trace('stdout chunk; bytes=%s forwarding=%s request=%s', data.length, !!this.startHandlingStreamOutput, this.currentTask?.requestId);
                 data = data.toString();
                 if (this.startHandlingStreamOutput) {
                     const output = this.getCellOutput();
@@ -247,6 +294,7 @@ export class JavaScriptKernel implements IDisposable {
                             data = data.replace(`${this.waitingForLastOutputMessage.expectedString}${EOL}`, '');
                             data = data.replace(`${this.waitingForLastOutputMessage.expectedString}`, '');
                             this.waitingForLastOutputMessage.deferred.resolve();
+                            this.trace('stdout completion marker received; request=%s', this.currentTask?.requestId);
                         }
                         output.appendStreamOutput(data, 'stdout');
                     }
@@ -257,14 +305,16 @@ export class JavaScriptKernel implements IDisposable {
         });
     }
     private async sendMessage(message: RequestType) {
+        this.trace('send waiting; type=%s request=%s', message.type, message.requestId);
         await this.start();
         const ws = await this.webSocket.promise;
         ws.send(JSON.stringify(message));
+        this.trace('sent; type=%s request=%s readyState=%s', message.type, message.requestId, ws.readyState);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private onMessage(message: ResponseType) {
-        console.info(`Ext got message ${message.type} with ${message}`);
+        this.trace('received; type=%s request=%s', message.type, message.requestId);
         switch (message.type) {
             case 'pong':
                 break;
@@ -313,44 +363,37 @@ export class JavaScriptKernel implements IDisposable {
                 break;
             }
             case 'cellExec': {
+                this.trace('execution response; request=%s success=%s result=%s markerReceived=%s error=%s', message.requestId, message.success, message.success ? message.result?.type : undefined, this.waitingForLastOutputMessage?.deferred.completed, message.success ? undefined : message.ex);
                 const item = this.tasks.get(message.requestId);
                 if (item) {
-                    if (message.success == true && message.result) {
-                        const result = message.result;
-                        // Append output (like value of last expression in cell) after we've received all of the console outputs.
-                        if (this.waitingForLastOutputMessage) {
-                            this.waitingForLastOutputMessage?.deferred.promise.then(() =>
-                                item.stdOutput.appendOutput(result)
-                            );
-                        } else {
-                            item.stdOutput.appendOutput(result);
-                        }
-                    }
-                    if (message.success === false && message.ex) {
-                        const responseEx = message.ex as unknown as Partial<Error>;
-                        const error = new Error(responseEx.message || 'unknown');
-                        error.name = responseEx.name || error.name;
-                        error.stack = responseEx.stack || error.stack;
-                        // Append error after we've received all of the console outputs.
-                        if (this.waitingForLastOutputMessage) {
-                            this.waitingForLastOutputMessage?.deferred.promise.then(() =>
-                                item.stdOutput.appendError(error)
-                            );
-                        } else {
-                            item.stdOutput.appendError(error);
-                        }
-                    }
-                    const state = message.success ? CellExecutionState.success : CellExecutionState.error;
-                    if (this.currentTask?.task === item.task) {
-                        item.stdOutput.end(message.success, message.end || Date.now());
-                        item.result.resolve(state);
-                        this.currentTask = undefined;
-                    } else {
-                        item.stdOutput.end(message.success, message.end || Date.now());
-                        item.result.resolve(state);
-                    }
+                    const outputCompleted = this.waitingForLastOutputMessage?.deferred.promise || Promise.resolve();
+                    void outputCompleted
+                        .then(async () => {
+                            this.trace('request=%s output barrier passed; appending result and ending cell', message.requestId);
+                            if (message.success && message.result) {
+                                item.stdOutput.appendOutput(message.result);
+                            }
+                            if (message.success === false && message.ex) {
+                                const error = new Error(message.ex.message || 'unknown');
+                                error.name = message.ex.name || error.name;
+                                error.stack = message.ex.stack || error.stack;
+                                item.stdOutput.appendError(error);
+                            }
+                            await item.stdOutput.end(message.success, message.end || Date.now());
+                            if (this.currentTask?.task === item.task) {
+                                this.currentTask = undefined;
+                            }
+                            this.tasks.delete(message.requestId);
+                            item.result.resolve(message.success ? CellExecutionState.success : CellExecutionState.error);
+                            this.trace('request=%s cell completed; success=%s', message.requestId, message.success);
+                        })
+                        .catch((error: unknown) => {
+                            ServerLogger.appendLine('Failed to finish cell execution:', error);
+                            item.result.reject(error);
+                        });
+                } else {
+                    this.trace('execution response has no matching task; request=%s', message.requestId);
                 }
-                this.tasks.delete(message.requestId ?? -1);
                 break;
             }
             case 'output': {
@@ -373,16 +416,15 @@ export class JavaScriptKernel implements IDisposable {
         return this.currentTask?.stdOutput || this.lastStdOutput;
     }
     private getPort() {
-        return new Promise<number>((resolve) => {
-            // Chain the promises, to avoid getting the same port when we expect two distinct ports.
-            getPortsPromise = getPortsPromise.then(async () => {
-                const port = await getPort();
-                if (usedPorts.has(port)) {
-                    return this.getPort();
-                }
-                usedPorts.add(port);
-                resolve(port);
-            });
+        const allocation = getPortsPromise.then(async () => {
+            let port = await getPort();
+            while (usedPorts.has(port)) {
+                port = await getPort();
+            }
+            usedPorts.add(port);
+            return port;
         });
+        getPortsPromise = allocation.then(noop, noop);
+        return allocation;
     }
 }

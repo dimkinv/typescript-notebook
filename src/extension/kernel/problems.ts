@@ -13,6 +13,7 @@ import { disposeAllDisposables } from '../utils';
 import { parse as parseStack } from 'error-stack-parser';
 import type ErrorStackParser from 'error-stack-parser';
 import { Compiler } from './compiler';
+import { ServerLogger } from '../serverLogger';
 
 const runtimeDiagnosticsCollection = languages.createDiagnosticCollection('TypeScript Notebook Runtime');
 const typeDiagnosticsCollection = languages.createDiagnosticCollection('TypeScript Notebook');
@@ -93,12 +94,15 @@ export class CellDiagnosticsProvider {
             return true;
         }
         const diagnosticsByCell = new Map<string, Diagnostic[]>();
-        Compiler.getTypeDiagnostics(notebook, mode === 'strict').forEach((item) => {
+        const typeDiagnostics = Compiler.getTypeDiagnostics(notebook, mode === 'strict');
+        ServerLogger.appendLine('[Type check %s] mode=%s diagnostics=%s', notebook.uri.fsPath, mode, typeDiagnostics.length);
+        typeDiagnostics.forEach((item) => {
             const start = item.cell.document.positionAt(item.start);
             const end = item.cell.document.positionAt(item.start + item.length);
             const diagnostic = new Diagnostic(new Range(start, end), item.message, mapDiagnosticSeverity(item.category));
             diagnostic.code = item.code;
             diagnostic.source = 'TypeScript';
+            ServerLogger.appendLine('[Type check %s] cell=%s line=%s column=%s code=TS%s category=%s message=%s', notebook.uri.fsPath, item.cell.index + 1, start.line + 1, start.character + 1, item.code, item.category, item.message);
             const key = item.cell.document.uri.toString();
             const diagnostics = diagnosticsByCell.get(key) || [];
             diagnostics.push(diagnostic);

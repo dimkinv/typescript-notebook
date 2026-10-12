@@ -44,7 +44,7 @@ export class CellOutput {
         return NotebookTfVisOutputsByContainer.get(this.cell.notebook)!;
     }
     private tempTask?: NotebookCellExecution;
-    private readonly rendererComms = notebooks.createRendererMessaging('tensorflow-vis-renderer');
+    private readonly rendererComms = notebooks.createRendererMessaging('node-notebook-extended-tensorflow-vis-renderer');
     private get task() {
         if (this.tempTask) {
             return this.tempTask;
@@ -280,7 +280,7 @@ export class CellOutput {
                     individualOutputItems.push(output);
                 }
                 const items: NotebookCellOutputItem[] = [];
-                Promise.all(
+                await Promise.all(
                     individualOutputItems.map(async (value) => {
                         switch (value.type) {
                             case 'image': {
@@ -328,14 +328,14 @@ export class CellOutput {
                 );
                 if (items.length > 0) {
                     this.lastOutputStream = undefined;
-                    this.task.appendOutput(new NotebookCellOutput(items)).then(noop, noop);
+                    await this.task.appendOutput(new NotebookCellOutput(items));
                 }
             })
             .finally(() => this.endTempTask());
     }
     public appendError(ex?: Partial<Error>) {
         this.promise = this.promise
-            .finally(() => {
+            .finally(async () => {
                 CellDiagnosticsProvider.displayErrorsAsProblems(this.cell.notebook, ex);
                 const newEx = new Error(ex?.message || '<unknown>');
                 newEx.name = ex?.name || '';
@@ -345,7 +345,7 @@ export class CellOutput {
                 newEx.stack = newEx.stack.replace(`${newEx.name}: ${newEx.message}\n`, '');
                 newEx.stack = Compiler.fixCellPathsInStackTrace(this.cell.notebook, newEx);
                 const output = new NotebookCellOutput([NotebookCellOutputItem.error(newEx)]);
-                this.task.appendOutput(output);
+                await this.task.appendOutput(output);
             })
             .then(noop, (ex) => console.error('Failed to append the Error output in cellOutput', ex))
             .finally(() => this.endTempTask());

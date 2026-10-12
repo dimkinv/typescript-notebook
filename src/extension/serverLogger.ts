@@ -14,7 +14,7 @@ export class ServerLogger implements IDisposable {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static appendLine(...params: any[]) {
         const message = util.format(params[0], ...params.slice(1));
-        ServerLogger.output.appendLine(message);
+        ServerLogger.output.appendLine(`[${new Date().toISOString()}] ${message}`);
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static append(...params: any[]) {

@@ -7,10 +7,12 @@ out/**/*.stats.json
 out/**/*..analyzer.html
 src/**
 resources/scripts/tfjs/**
+resources/typescript-notebook-plugin/**
 temp/**
 .gitignore
 !resources/scripts/node_modules/**
 node_modules/**
+!node_modules/typescript-notebook-plugin/**
 vsc-extension-quickstart.md
 **/*.js.map
 **/tsconfig.json

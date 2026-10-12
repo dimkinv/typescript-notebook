@@ -16,12 +16,13 @@ import { CellDiagnosticsProvider } from './kernel/problems';
 
 export async function activate(context: ExtensionContext) {
     registerDisposableRegistry(context);
+    ServerLogger.register();
+    ServerLogger.appendLine('Extension activated: root=%s node=%s platform=%s', context.extensionUri.fsPath, process.version, process.platform);
     Samples.regsiter(context);
     Compiler.register(context);
     CellDiagnosticsProvider.register(context);
     ContentProvider.register(context);
     Controller.regsiter();
-    ServerLogger.register();
     TensorflowVisClient.register(context);
     DebuggerCommands.register(context);
     DebuggerFactory.regsiter(context);

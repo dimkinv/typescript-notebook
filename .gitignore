@@ -6,3 +6,5 @@ node_modules
 *.vsix
 **/*.analyzer.html
 **/*.stats.json
+resources/typescript-notebook-plugin/index.js
+resources/typescript-notebook-plugin/index.js.map

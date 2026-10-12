@@ -1,6 +1,7 @@
 const path = require('path');
 const constants = require('../constants');
 const common = require('./common');
+const CopyPlugin = require('copy-webpack-plugin');
 const configFileName = 'tsconfig.json';
 
 module.exports = {
@@ -9,12 +10,18 @@ module.exports = {
     entry: {
         extension: './src/extension/index.ts',
         server: './src/extension/server/index.ts',
+        typescriptNotebookPlugin: {
+            import: './src/extension/typescriptPlugin.ts',
+            library: { type: 'commonjs2', export: 'default' }
+        },
         test: './src/test/runTest.ts'
     },
     output: {
         hashFunction: 'sha256',
         filename: (pathData) => {
-            if (pathData.chunk.name === 'server') {
+            if (pathData.chunk.name === 'typescriptNotebookPlugin') {
+                return path.join('node_modules', 'typescript-notebook-plugin', 'index.js');
+            } else if (pathData.chunk.name === 'server') {
                 return path.join('out', 'extension', 'server', 'index.js');
             } else if (pathData.chunk.name === 'test') {
                 return path.join('out', 'test', 'runTest.js');
@@ -40,7 +47,17 @@ module.exports = {
         'xterm-addon-serialize',
         'node-kernel'
     ],
-    plugins: [...common.getDefaultPlugins('extension')],
+    plugins: [
+        ...common.getDefaultPlugins('extension'),
+        new CopyPlugin({
+            patterns: [
+                {
+                    from: 'resources/typescript-notebook-plugin/package.json',
+                    to: 'node_modules/typescript-notebook-plugin/package.json'
+                }
+            ]
+        })
+    ],
     resolve: {
         extensions: ['.ts', '.js']
     },

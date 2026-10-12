@@ -44,6 +44,21 @@ Use the command `Open a sample node.js notebook` to open a sample notebook to ge
 ## Type checking
 Type checking is enabled by default for TypeScript cells and follows document order. Configure **Node.js Notebooks Extended: Type Checking** as `off`, `on`, or `strict`. The `on` mode uses the nearest `tsconfig.json`, while `strict` additionally forces TypeScript strict mode.
 
+TypeScript diagnostics are advisory: cells still execute and display output even when this or another cell has type errors. Runtime JavaScript errors can still stop execution.
+
+Node.js declarations are supplied to both notebook-wide type checking and VS Code's TypeScript language service for `.nnb` cells. Project Node.js types are preferred, with bundled declarations used when the project has none. Node globals, timers, and built-in modules do not require adding `dom` to the project's `lib` option. After updating the extension, reload the window so the TypeScript server loads its notebook plugin.
+
+### TypeScript 7 Native Preview
+The notebook editor plugin requires the JavaScript-based TypeScript server (TypeScript 5 or 6). TypeScript 7 Native Preview does not load TypeScript server plugins and warns when this extension is installed with Native Preview enabled globally.
+
+To enable the notebook editor integration, choose **Disable Native Preview in Workspace** in that warning, then run **Developer: Reload Window**. Alternatively, set `"js/ts.experimental.useTsgo": false` in the workspace settings and reload. This leaves Native Preview enabled globally for other workspaces.
+
+Notebook execution and this extension's notebook-wide type checking use the bundled TypeScript compiler and do not depend on Native Preview. Dismissing the warning does not enable the editor plugin under TypeScript 7.
+
+Cell execution waits for console output to be delivered before showing completion, so `console.log` output is not lost when the kernel's completion message arrives before stdout.
+
+For troubleshooting, open **View: Toggle Output** and select **TypeScript Kernel**. Logs include timestamps, notebook paths, cell numbers, request IDs, startup and connection events, stdout/stderr delivery, completion markers, and this extension's type diagnostics. Restart the kernel and reproduce the problem once, then copy the log. Logs can contain notebook code, diagnostic text, and local paths; review and redact sensitive content before sharing. Errors from another extension's Problems collection must be copied from the Problems panel separately.
+
 This fork retains support for `*.nnb` files. Disable the original extension when using this fork to avoid both extensions claiming the same file type.
 
 ## Roadmap

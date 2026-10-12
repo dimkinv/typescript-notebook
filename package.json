@@ -2,7 +2,7 @@
     "name": "nodejs-notebooks-extended",
     "displayName": "Node.js Notebooks Extended (REPL)",
     "description": "Maintained Node.js notebooks for JavaScript and TypeScript, with cross-cell type checking, debugging, and rich visualizations.",
-    "version": "0.1.2",
+    "version": "0.1.7",
     "engines": {
         "vscode": "^1.62.0"
     },
@@ -73,6 +73,12 @@
     ],
     "main": "./out/extension/index.js",
     "contributes": {
+        "typescriptServerPlugins": [
+            {
+                "name": "typescript-notebook-plugin",
+                "enableForWorkspaceTypeScriptVersions": true
+            }
+        ],
         "commands": [
             {
                 "category": "Notebook",
@@ -374,9 +380,18 @@
     },
     "jest": {
         "testEnvironment": "node",
-        "testMatch": ["**/*.spec.ts"],
+        "testMatch": [
+            "**/*.spec.ts"
+        ],
         "transform": {
-            "^.+\\.tsx?$": ["ts-jest", { "tsconfig": { "esModuleInterop": true } }]
+            "^.+\\.tsx?$": [
+                "ts-jest",
+                {
+                    "tsconfig": {
+                        "esModuleInterop": true
+                    }
+                }
+            ]
         }
     },
     "dependencies": {
@@ -397,6 +412,7 @@
         "source-map": "^0.6.1",
         "tmp": "^0.2.1",
         "typescript": "5.9.3",
+        "typescript-notebook-plugin": "file:resources/typescript-notebook-plugin",
         "uuid": "^8.3.2",
         "ws": "^7.5.3",
         "xterm": "^4.13.0",
