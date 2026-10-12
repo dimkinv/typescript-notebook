@@ -3,7 +3,7 @@ const FixDefaultImportPlugin = require('webpack-fix-default-import-plugin');
 const path = require('path');
 const constants = require('../constants');
 const configFileName = 'tsconfig.client.json';
-const CopyPlugin = require("copy-webpack-plugin");
+const CopyPlugin = require('copy-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 // Any build on the CI is considered production mode.
 const isProdBuild = constants.isCI || process.argv.some((argv) => argv.includes('mode') && argv.includes('production'));
@@ -36,7 +36,10 @@ module.exports = {
         // new FixDefaultImportPlugin(),
         new ForkTsCheckerWebpackPlugin({
             typescript: {
-                checkSyntacticErrors: true,
+                diagnosticOptions: {
+                    syntactic: true,
+                    semantic: true
+                },
                 configFile: configFileName,
                 memoryLimit: 9096
             }
@@ -46,10 +49,20 @@ module.exports = {
         // ...common.getDefaultPlugins('extension')
         new CopyPlugin({
             patterns: [
-              { from: path.join(constants.ExtensionRootDir, "node_modules/typescript/lib/typescript.js"), to: path.join(constants.ExtensionRootDir, "resources/scripts/node_modules/typescript/index.js") },
-              { from: path.join(constants.ExtensionRootDir, "node_modules/typescript/LICENSE.txt"), to: path.join(constants.ExtensionRootDir, "resources/scripts/node_modules/typescript/LICENSE.txt") }
-            ],
-          }),
+                {
+                    from: path.join(constants.ExtensionRootDir, 'node_modules/typescript/lib/typescript.js'),
+                    to: path.join(constants.ExtensionRootDir, 'resources/scripts/node_modules/typescript/index.js')
+                },
+                {
+                    from: path.join(constants.ExtensionRootDir, 'node_modules/typescript/lib/lib*.d.ts'),
+                    to: path.join(constants.ExtensionRootDir, 'resources/scripts/node_modules/typescript/[name][ext]')
+                },
+                {
+                    from: path.join(constants.ExtensionRootDir, 'node_modules/typescript/LICENSE.txt'),
+                    to: path.join(constants.ExtensionRootDir, 'resources/scripts/node_modules/typescript/LICENSE.txt')
+                }
+            ]
+        })
     ],
     stats: {
         performance: false

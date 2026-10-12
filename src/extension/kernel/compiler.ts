@@ -11,6 +11,44 @@ import { getNotebookCwd } from '../utils';
 declare const __webpack_require__: any;
 declare const __non_webpack_require__: any;
 let ts: typeof import('typescript');
+let nodeTypesPath: string;
+
+function ensureTypeScript(extensionRoot?: string): typeof import('typescript') {
+    if (ts) {
+        return ts;
+    }
+
+    const typescriptPath = extensionRoot
+        ? path.join(extensionRoot, 'resources', 'scripts', 'node_modules', 'typescript', 'index.js')
+        : undefined;
+    const requireFunc =
+        typeof __webpack_require__ === 'function' && typeof __non_webpack_require__ === 'function'
+            ? __non_webpack_require__
+            : require;
+    const installedTypeScriptPath = extensionRoot
+        ? path.join(extensionRoot, 'resources', 'scripts', 'node_modules', 'typescript', 'lib', 'typescript.js')
+        : undefined;
+    ts =
+        typescriptPath && fs.existsSync(typescriptPath)
+            ? requireFunc(typescriptPath)
+            : installedTypeScriptPath && fs.existsSync(installedTypeScriptPath)
+            ? requireFunc(installedTypeScriptPath)
+            : requireFunc('typescript');
+    const bundledNodeTypesPath = path.join(
+        extensionRoot || path.resolve(__dirname, '../../..'),
+        'resources',
+        'scripts',
+        'node_modules',
+        '@types',
+        'node',
+        'index.d.ts'
+    );
+    nodeTypesPath =
+        bundledNodeTypesPath && fs.existsSync(bundledNodeTypesPath)
+            ? bundledNodeTypesPath
+            : requireFunc.resolve('@types/node/index.d.ts');
+    return ts;
+}
 
 export type CellTypeDiagnostic = {
     cell: NotebookCell;
@@ -37,18 +75,10 @@ const codeObjectToSourceMaps = new WeakMap<
 
 export namespace Compiler {
     export function register(context: ExtensionContext) {
-        const typescriptPath = path.join(
-            context.extensionUri.fsPath,
-            'resources',
-            'scripts',
-            'node_modules',
-            'typescript',
-            'index.js'
-        );
-        const requireFunc = typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
-        ts = fs.existsSync(typescriptPath) ? requireFunc(typescriptPath) : requireFunc('typescript');
+        ensureTypeScript(context.extensionUri.fsPath);
     }
     export function getTypeDiagnostics(notebook: NotebookDocument, strict: boolean): CellTypeDiagnostic[] {
+        ensureTypeScript();
         const cells = notebook.getCells().filter((cell) => cell.document.languageId === 'typescript');
         if (cells.length === 0) {
             return [];
@@ -90,6 +120,7 @@ export namespace Compiler {
         const virtualFileName = `${notebookPath}.ts`;
         const canonicalVirtualFileName = path.resolve(virtualFileName);
         const host = ts.createCompilerHost(options);
+        host.getCurrentDirectory = () => cwd;
         const originalGetSourceFile = host.getSourceFile.bind(host);
         const originalFileExists = host.fileExists.bind(host);
         const originalReadFile = host.readFile.bind(host);
@@ -101,7 +132,13 @@ export namespace Compiler {
                 ? ts.createSourceFile(fileName, source, languageVersion, true, ts.ScriptKind.TS)
                 : originalGetSourceFile(fileName, languageVersion, onError, shouldCreateNewSourceFile);
 
-        const program = ts.createProgram([virtualFileName], options, host);
+        const projectNodeTypes = ts.resolveTypeReferenceDirective('node', virtualFileName, options, host)
+            .resolvedTypeReferenceDirective;
+        const program = ts.createProgram(
+            [virtualFileName, projectNodeTypes?.resolvedFileName || nodeTypesPath],
+            options,
+            host
+        );
         const notebookSyntaxDiagnosticCodes = new Set([1108, 1375, 1378]);
         return ts
             .getPreEmitDiagnostics(program)
@@ -331,6 +368,7 @@ export namespace Compiler {
         supportBreakingOnExceptionsInDebugger: boolean = true
     ): CodeObject {
         try {
+            ensureTypeScript();
             // Parser fails when we have comments in the last line, hence just add empty line.
             code = `${code}${EOL}`;
             const details = createCodeObject(cell);
@@ -405,6 +443,7 @@ const layout = {
 const newDf = df.set_index({ key: "Date" })
 newDf.plot("").line({ columns: ["AAPL.Open", "AAPL.High"], layout })
             */
+            transpiledCode = transpiledCode.replace('"use strict";', ' '.repeat('"use strict";'.length));
 
             // Split generated source & source maps
             const lines = transpiledCode.split(/\r?\n/).filter((line) => !line.startsWith(dummyFnToUseImports));

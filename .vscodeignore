@@ -20,6 +20,7 @@ vsc-extension-quickstart.md
 **/.eslintrc.json
 **/.prettierrc.js
 **/*.ts
+!resources/scripts/node_modules/**/*.d.ts
 **/*.stats.json
 **/*.analyzer.html
 **/*.bundle.js.map

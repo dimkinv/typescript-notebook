@@ -126,11 +126,11 @@ suite('Top level await compiler tests', () => {
         ],
         [
             'import {readFileSync, readFile} from "fs"; await readFileSync("filename");',
-            'var readFileSync;var readFile;void ({    readFileSync,    readFile} = require("fs"));var fs_1;(async () => {    fs_1 = require("fs");    return await fs_1.readFileSync("filename");})();'
+            'var readFileSync;var readFile;void ({    readFileSync,    readFile} = require("fs"));var fs_1;(async () => {    fs_1 = require("fs");    return await (0, fs_1.readFileSync)("filename");})();'
         ],
         [
             'import {readFileSync:Read, readFile} from "fs"; await Read("filename");',
-            'var readFileSync;var Read;var readFile;void ({    readFileSync,    Read,    readFile} = require("fs"));var fs_1;(async () => {    fs_1 = require("fs");    return await fs_1.Read("filename");})();'
+            'var readFileSync;var Read;var readFile;void ({    readFileSync,    Read,    readFile} = require("fs"));var fs_1;(async () => {    fs_1 = require("fs");    return await (0, fs_1.Read)("filename");})();'
         ]
     ];
     const disposables: IDisposable[] = [];

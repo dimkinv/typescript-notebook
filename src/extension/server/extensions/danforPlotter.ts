@@ -2,6 +2,9 @@ import type * as dfd from 'danfojs-node';
 import { sendMessage } from '../comms';
 import { v4 as uuid } from 'uuid';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type PlotConfiguration = Record<string, any>;
+
 function generatePlot(data, config, eleId: string) {
     const parentId = uuid().replace(/-/g, '');
     const html = `
@@ -47,7 +50,7 @@ export class DanfoNodePlotter {
     line(config = {}) {
         const ret_params = this.__get_plot_params(config);
 
-        const this_config = ret_params[0];
+        const this_config = ret_params[0] as PlotConfiguration;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const params = ret_params[1] as string[];
 
@@ -142,7 +145,7 @@ export class DanfoNodePlotter {
     bar(config = {}) {
         const ret_params = this.__get_plot_params(config);
 
-        const this_config = ret_params[0];
+        const this_config = ret_params[0] as PlotConfiguration;
         const params = ret_params[1] as any;
 
         if (this.ndframe instanceof this.danfojs.Series) {
@@ -221,7 +224,7 @@ export class DanfoNodePlotter {
     scatter(config = {}) {
         const ret_params = this.__get_plot_params(config);
 
-        const this_config = ret_params[0];
+        const this_config = ret_params[0] as PlotConfiguration;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const params = ret_params[1] as any;
 
@@ -309,7 +312,7 @@ export class DanfoNodePlotter {
     hist(config = {}) {
         const ret_params = this.__get_plot_params(config);
 
-        const this_config = ret_params[0];
+        const this_config = ret_params[0] as PlotConfiguration;
         const params = ret_params[1] as any;
 
         if (this.ndframe instanceof this.danfojs.Series) {
@@ -366,7 +369,7 @@ export class DanfoNodePlotter {
     pie(config = {}) {
         const ret_params = this.__get_plot_params(config);
 
-        const this_config = ret_params[0];
+        const this_config = ret_params[0] as PlotConfiguration;
 
         if (this.ndframe instanceof this.danfojs.Series) {
             const data = [
@@ -482,7 +485,7 @@ export class DanfoNodePlotter {
     box(config = {}) {
         const ret_params = this.__get_plot_params(config);
 
-        const this_config = ret_params[0];
+        const this_config = ret_params[0] as PlotConfiguration;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const params = ret_params[1] as any[];
 
@@ -567,7 +570,7 @@ export class DanfoNodePlotter {
     violin(config = {}) {
         const ret_params = this.__get_plot_params(config);
 
-        const this_config = ret_params[0];
+        const this_config = ret_params[0] as PlotConfiguration;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const params = ret_params[1] as any[];
 
@@ -653,7 +656,7 @@ export class DanfoNodePlotter {
     table(config = {}) {
         const ret_params = this.__get_plot_params(config);
 
-        const this_config = ret_params[0];
+        const this_config = ret_params[0] as PlotConfiguration;
         const header = {};
         const cells = {};
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
